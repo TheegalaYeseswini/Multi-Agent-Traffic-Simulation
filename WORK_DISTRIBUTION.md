@@ -1,6 +1,5 @@
-# Work Distribution for 4 Team Members
 
-This project can be divided into four clear contributions based on the actual modules in the codebase.
+This project can be divided into five clear contributions based on the actual modules in the codebase.
 
 ## Yeseswini: Project Setup and Simulation Control
 
