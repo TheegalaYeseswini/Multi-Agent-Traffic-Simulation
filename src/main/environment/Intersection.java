@@ -37,6 +37,22 @@ public class Intersection {
         return size;
     }
 
+    public int getMinX() {
+        return centerX - (size / 2);
+    }
+
+    public int getMaxX() {
+        return centerX + (size / 2);
+    }
+
+    public int getMinY() {
+        return centerY - (size / 2);
+    }
+
+    public int getMaxY() {
+        return centerY + (size / 2);
+    }
+
     public TrafficSignal getHorizontalSignal() {
         return horizontalSignal;
     }
@@ -65,6 +81,10 @@ public class Intersection {
     }
 
     public boolean canProceed(Lane.Direction direction, Agent agent) {
+        if (agent.getLane().getLaneType() == Lane.LaneType.PEDESTRIAN) {
+            return canPedestrianProceed(direction);
+        }
+
         TrafficSignal signal = getSignalFor(direction);
         if (signal.getState() == SignalState.GREEN) {
             return true;
@@ -73,6 +93,11 @@ public class Intersection {
             return agent.getBehaviorStrategy().canProceedOnYellow(agent);
         }
         return false;
+    }
+
+    private boolean canPedestrianProceed(Lane.Direction direction) {
+        TrafficSignal conflictingVehicleSignal = direction.isHorizontal() ? verticalSignal : horizontalSignal;
+        return conflictingVehicleSignal.getState() == SignalState.RED;
     }
 
     public TrafficSignal getSignalFor(Lane.Direction direction) {

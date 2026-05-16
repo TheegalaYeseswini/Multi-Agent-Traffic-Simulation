@@ -117,16 +117,18 @@ public class Lane {
         if (direction.isHorizontal()) {
             int minX = Math.min(startX, endX);
             int maxX = Math.max(startX, endX);
-            return startY == intersection.getCenterY()
-                    && intersection.getCenterX() >= minX
-                    && intersection.getCenterX() <= maxX;
+            return startY >= intersection.getMinY()
+                    && startY <= intersection.getMaxY()
+                    && maxX >= intersection.getMinX()
+                    && minX <= intersection.getMaxX();
         }
 
         int minY = Math.min(startY, endY);
         int maxY = Math.max(startY, endY);
-        return startX == intersection.getCenterX()
-                && intersection.getCenterY() >= minY
-                && intersection.getCenterY() <= maxY;
+        return startX >= intersection.getMinX()
+                && startX <= intersection.getMaxX()
+                && maxY >= intersection.getMinY()
+                && minY <= intersection.getMaxY();
     }
 
     public double getProgressAtIntersection(Intersection intersection) {
@@ -134,11 +136,12 @@ public class Lane {
             return -1.0;
         }
 
-        if (direction.isHorizontal()) {
-            return Math.abs(intersection.getCenterX() - startX);
-        }
-
-        return Math.abs(intersection.getCenterY() - startY);
+        return switch (direction) {
+            case EAST -> Math.max(0, intersection.getMinX() - startX);
+            case WEST -> Math.max(0, startX - intersection.getMaxX());
+            case SOUTH -> Math.max(0, intersection.getMinY() - startY);
+            case NORTH -> Math.max(0, startY - intersection.getMaxY());
+        };
     }
 
     private double clamp(double value, double min, double max) {
