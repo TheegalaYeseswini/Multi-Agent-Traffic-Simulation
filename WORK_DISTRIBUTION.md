@@ -43,6 +43,3 @@ Handled disruption features, visualization, and project explanation materials.
 - Created the visual simulation panel in `src/main/ui/SimulationPanel.java`
 - Drew roads, signals, agents, event overlays, and HUD information
 - Prepared supporting documentation in `README.md` and `CODE_WALKTHROUGH.md`
-
-3. Person 3: Cars, pedestrians, and behavior logic
-4. Person 4: Events, GUI visualization, and documentation
