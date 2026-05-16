@@ -1,8 +1,7 @@
-# Work Distribution for 4 Team Members
 
-This project can be divided into four clear contributions based on the actual modules in the codebase.
+This project can be divided into five clear contributions based on the actual modules in the codebase.
 
-## Person 1: Project Setup and Simulation Control
+## Yeseswini: Project Setup and Simulation Control
 
 Handled the main application flow and overall simulation coordination.
 
@@ -12,7 +11,7 @@ Handled the main application flow and overall simulation coordination.
 - Managed agent updates, event updates, and signal updates in one simulation loop
 - Seeded the initial cars and pedestrians into the simulation
 
-## Person 2: Road Network and Traffic Signal System
+## Navya and Rishitha: Road Network and Traffic Signal System
 
 Handled the map structure and traffic control logic.
 
@@ -23,7 +22,7 @@ Handled the map structure and traffic control logic.
 - Built the traffic signal model in `src/main/traffic/TrafficSignal.java`
 - Implemented traffic light timing and switching in `src/main/traffic/SignalController.java`
 
-## Person 3: Agents and Behavior Logic
+## Sneha: Agents and Behavior Logic
 
 Handled how vehicles and pedestrians move inside the simulation.
 
@@ -34,7 +33,7 @@ Handled how vehicles and pedestrians move inside the simulation.
 - Used the Strategy Pattern in `src/main/behavior/`
 - Implemented `BehaviorStrategy`, `NormalBehavior`, and `AggressiveBehavior`
 
-## Person 4: Events, Visual Interface, and Documentation
+## Hesritha: Events, Visual Interface, and Documentation
 
 Handled disruption features, visualization, and project explanation materials.
 
@@ -45,11 +44,5 @@ Handled disruption features, visualization, and project explanation materials.
 - Drew roads, signals, agents, event overlays, and HUD information
 - Prepared supporting documentation in `README.md` and `CODE_WALKTHROUGH.md`
 
-## Short Version for Viva or Report
-
-If you need a very short distribution:
-
-1. Person 1: Main program flow and simulation engine
-2. Person 2: Road network, lanes, intersections, and traffic signals
 3. Person 3: Cars, pedestrians, and behavior logic
 4. Person 4: Events, GUI visualization, and documentation
