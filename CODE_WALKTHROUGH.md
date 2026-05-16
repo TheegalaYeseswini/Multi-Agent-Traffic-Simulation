@@ -7,6 +7,7 @@ Important note:
 - I explain blank lines only when they matter. They are mostly there just to visually separate code blocks.
 - For very repetitive getter methods, I explain them as a short ordered group instead of repeating the exact same sentence many times.
 - The walkthrough is still in code order, so you can follow the files top to bottom without guessing what happens next.
+- This walkthrough reflects the current version of the app, including the improved UI and the newer pedestrian rule where pedestrians wait for conflicting vehicle traffic to stop.
 
 ---
 
@@ -153,8 +154,8 @@ This file is very important. A lane is the path an agent follows.
 | 110 | Prevents division by zero if something weird creates a zero-length lane. |
 | 111-112 | Calculates the direction vector of the lane as one unit of movement. |
 | 113 | Builds and returns the actual point on the lane. |
-| 116-130 | `crosses(intersection)` checks whether this lane passes through a given intersection. Horizontal lanes compare `y` and x-range. Vertical lanes compare `x` and y-range. |
-| 132-142 | `getProgressAtIntersection(...)` answers: if the lane crosses the intersection, how far along the lane is that crossing point? This is how agents know when they are approaching a signal. |
+| 116-132 | `crosses(intersection)` checks whether this lane passes through the rectangular junction area. This is more accurate than checking only the exact center line, because the vehicle lanes are offset from the center. |
+| 134-145 | `getProgressAtIntersection(...)` returns the progress value at the edge of the junction box. This is the stop point agents use before entering the intersection. |
 | 144-146 | Small helper to keep a number inside a minimum and maximum range. |
 | 147 | Ends the class. |
 
@@ -206,7 +207,7 @@ This file owns the traffic signals and the rules for whether an agent can enter 
 
 | Lines | Explanation |
 | --- | --- |
-| 24-46 | Getter methods return the ID, position, size, and both traffic signals. |
+| 24-62 | Getter methods return the ID, center point, junction bounds, size, and both traffic signals. |
 
 ### Signal cycle
 
@@ -223,9 +224,19 @@ This file owns the traffic signals and the rules for whether an agent can enter 
 
 | Lines | Explanation |
 | --- | --- |
-| 67-76 | `canProceed(...)` checks the relevant signal for the lane direction. Green means go. Yellow depends on behavior. Red means stop. |
-| 78-80 | `getSignalFor(...)` maps east/west directions to the horizontal signal and north/south to the vertical signal. |
-| 81 | Ends the class. |
+| 83-95 | `canProceed(...)` now has separate handling for pedestrians and vehicles. |
+| 84-85 | If the lane is pedestrian-only, the method delegates to `canPedestrianProceed(...)`. |
+| 88-95 | Vehicle logic still works the same way: green means go, yellow depends on behavior, and red means stop. |
+| 98-100 | `getSignalFor(...)` maps east/west directions to the horizontal signal and north/south to the vertical signal. |
+| 102-105 | `canPedestrianProceed(...)` checks the conflicting vehicle signal. Pedestrians only walk when that vehicle direction is red. |
+| 106 | Ends the class. |
+
+### What the current pedestrian rule means
+
+- The crosswalk in this map runs horizontally across `Central Avenue`.
+- Because of that, pedestrians watch the vertical vehicle signal.
+- If `Central Avenue` is green or yellow, pedestrians wait.
+- If `Central Avenue` is red, pedestrians may cross.
 
 ---
 
@@ -459,7 +470,7 @@ This is the most important movement class. Cars and pedestrians both inherit fro
 | 67 | Finds where along the lane this intersection lies. |
 | 68-70 | If the lane does not really cross this intersection, skip it. |
 | 72-74 | Handles the edge case where movement wraps around the lane end in the same tick. |
-| 76-80 | If the agent would cross the signal point during this tick and the intersection says no, the target is reduced to just before the stop line. |
+| 76-80 | If the agent would cross the stop point during this tick and the intersection says no, the target is reduced to just before the stop line. This now works correctly for both cars and pedestrians. |
 | 84 | Returns the possibly reduced target progress. |
 
 ### Progress normalization
@@ -611,6 +622,8 @@ This is the central coordinator. If you want to understand the whole simulation,
 
 This file is the visual layer. It does not decide the rules. It reads the simulation state and draws it.
 
+The current version of this file is aimed at readability. It adds road labels, stop markers, a live status card, a clearer HUD, and wrapped event text so the UI is easier to understand.
+
 ### Constants and fields
 
 | Lines | Explanation |
@@ -621,39 +634,33 @@ This file is the visual layer. It does not decide the rules. It reads the simula
 | 28 | Declares `SimulationPanel`. |
 | 29 | `CELL_SIZE = 24` means one world grid unit becomes 24 screen pixels. |
 | 30 | `WORLD_MARGIN = 30` adds padding around the map. |
-| 31 | `HUD_WIDTH = 260` reserves space for the right-side info panel. |
-| 33 | Stores the `SimulationEngine`. |
-| 34 | Stores the Swing `Timer` that drives animation. |
+| 31 | `HUD_WIDTH = 320` reserves a wider space for the right-side dashboard. |
+| 34-37 | Shared font constants keep headings, body text, and small labels visually consistent. |
+| 39 | Stores the `SimulationEngine`. |
+| 40 | Stores the Swing `Timer` that drives animation. |
 
 ### Constructor
 
 | Lines | Explanation |
 | --- | --- |
-| 36-50 | Constructor saves the engine, computes panel size, sets background, creates the timer, and starts the timer. |
-| 38-40 | Computes width and height from grid size and layout constants. |
-| 42 | Sets the preferred panel size so the frame can pack correctly. |
-| 43 | Sets the panel background color. |
-| 45-48 | Creates a timer that fires every 120 ms. On each tick it updates the engine and requests a repaint. |
-| 49 | Starts the timer immediately. |
+| 42-56 | Constructor saves the engine, computes panel size, sets background, creates the timer, and starts the timer. |
+| The panel is slightly taller than before so the lower dashboard sections do not overlap. |
 
 ### Paint flow
 
 | Lines | Explanation |
 | --- | --- |
-| 52-63 | `paintComponent(...)` is Swing's standard drawing method. It clears old content, enables antialiasing, paints the background, draws the world, draws the HUD, and disposes the graphics copy. |
-| 65-71 | `paintBackground(...)` draws the dark gradient background. |
-| 73-79 | `drawWorld(...)` decides the order of world drawing: roads, intersection, events, signals, then agents. This order matters visually. |
+| `paintComponent(...)` is Swing's standard drawing method. It clears old content, enables antialiasing, paints the background, draws the world, draws the HUD, and disposes the graphics copy. |
+| `paintBackground(...)` draws the dark gradient background. |
+| `drawWorld(...)` now renders roads, stop lines, the junction, events, signal lamps, road labels, a live status banner, and finally agents. This order keeps information readable. |
 
 ### Roads and intersection
 
 | Lines | Explanation |
 | --- | --- |
-| 81-101 | `drawRoads(...)` loops through all roads and their lanes and draws each lane as a thick line. Vehicle lanes are darker and thicker than pedestrian lanes. A dashed line is drawn on top as a visual lane divider. |
-| 84 | Chooses thickness based on lane type. |
-| 85-88 | Converts grid coordinates into screen pixel positions. |
-| 90-94 | Draws the lane body. |
-| 96-98 | Draws the dashed center line. |
-| 103-116 | `drawIntersection(...)` draws the big central intersection box. |
+| `drawRoads(...)` loops through all roads and their lanes and draws each lane as a thick line. Vehicle lanes are darker and thicker than pedestrian lanes. A dashed line is drawn on top as a visual lane divider. |
+| `drawStopLines(...)` adds colored stop markers before the junction so viewers can immediately see which vehicle approach has red, yellow, or green. |
+| `drawIntersection(...)` draws the central junction box and the small `JUNCTION` label. |
 
 ### Events
 
@@ -667,56 +674,50 @@ This file is the visual layer. It does not decide the rules. It reads the simula
 
 | Lines | Explanation |
 | --- | --- |
-| 142-149 | `drawSignals(...)` places four visible lamps around each intersection. Two represent the horizontal signal and two represent the vertical signal. |
-| 151-163 | `drawSignalLamp(...)` draws a small signal housing and colors the active lamp based on signal state. |
-| 155-159 | Uses a switch expression to choose green, yellow, or red. |
+| `drawSignals(...)` places four visible lamps around each intersection. Two represent the horizontal signal and two represent the vertical signal. |
+| `drawRoadLabels(...)` places map labels such as `Main Street`, `Central Avenue`, `Crosswalk`, and directional hints near the edges instead of crowding the center. |
+| `drawLiveStatusBanner(...)` adds the top-left card that explains which road currently has `GO`, `STOP`, or `SLOW / CLEAR`. |
+| `drawSignalLamp(...)` draws a small signal housing and colors the active lamp based on signal state. |
 
 ### Agents
 
 | Lines | Explanation |
 | --- | --- |
-| 165-192 | `drawAgents(...)` draws every agent. |
-| 167 | Reads the agent's current world position from the engine state. |
-| 168-169 | Converts world position to screen position. |
-| 171 | Sets the drawing color to the agent's configured color. |
-| 172-175 | If the agent is circular, draw it as a circle. This is used for pedestrians. |
-| 176-185 | Otherwise draw a rounded rectangle. Width and height depend on direction so cars look horizontal or vertical depending on the lane. |
-| 188-190 | Draws the agent ID near the shape so you can track it visually. |
+| `drawAgents(...)` draws every agent. |
+| Cars are rounded rectangles and pedestrians are circles. |
+| The current version no longer draws agent ID labels beside each object, because that caused clutter and overlap. |
 
 ### HUD
 
 | Lines | Explanation |
 | --- | --- |
-| 194-218 | `drawHud(...)` draws the right-side panel showing simulation info. |
-| 195-198 | Computes the panel rectangle beside the world. |
-| 200-203 | Draws the dark HUD card. |
-| 205-207 | Draws the `Simulation` title. |
-| 209-214 | Draws live metrics: tick, agent count, moving cars, blocked lanes. |
-| 216-217 | Calls helper methods to draw the legend and event feed. |
+| `drawHud(...)` draws the right-side dashboard. |
+| The HUD now uses metric cards, a road-based signal status section, section dividers, a simplified legend, and a wrapped event list. |
 
 ### Legend
 
 | Lines | Explanation |
 | --- | --- |
-| 220-230 | `drawLegend(...)` writes a legend title and the five legend items. |
-| 232-238 | `drawLegendItem(...)` draws one colored marker and one label. |
+| `drawLegend(...)` writes a cleaner legend than the original version. |
+| `drawLegendItem(...)` draws one colored marker and one label. |
 
 ### Event feed
 
 | Lines | Explanation |
 | --- | --- |
-| 240-265 | `drawEventFeed(...)` lists currently active events in the HUD. |
-| 245-250 | If there are no active events, it shows `No disruptions right now.` |
-| 253-263 | Otherwise it loops through events and shows each event's color, name, remaining ticks, and description. |
-| 267-275 | `colorForEvent(...)` chooses red for accidents, orange for congestion, and gray as fallback. |
+| `drawEventFeed(...)` lists currently active events in the HUD. |
+| If there are no active events, it shows `No disruptions right now.` |
+| Event descriptions are wrapped, and if the section fills up the UI shows `More events active...` instead of letting text collide. |
+| `colorForEvent(...)` chooses red for accidents, orange for congestion, and gray as fallback. |
 
 ### Coordinate conversion
 
 | Lines | Explanation |
 | --- | --- |
-| 277-279 | `worldX(...)` converts a grid x-coordinate into a pixel x-coordinate. |
-| 281-283 | `worldY(...)` converts a grid y-coordinate into a pixel y-coordinate. |
-| 284 | Ends the class. |
+| `worldX(...)` converts a grid x-coordinate into a pixel x-coordinate. |
+| `worldY(...)` converts a grid y-coordinate into a pixel y-coordinate. |
+| `drawWrappedText(...)` is a helper that prevents long event descriptions from overflowing the panel width. |
+| The file also includes small helpers such as `colorForSignal(...)` and `drawSectionDivider(...)` to keep the UI consistent. |
 
 ---
 
