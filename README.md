@@ -199,3 +199,45 @@ The project was refined in stages:
 - redesigned UI for readability and less clutter
 
 This methodology helps keep the code testable and easier to evolve without rewriting the whole system.
+
+## OOP Concepts Used
+
+### Abstraction
+
+- `Agent` models a generic moving entity.
+- `Event` models a generic disruption.
+- `BehaviorStrategy` defines a generic behavior contract.
+
+### Encapsulation
+
+- Most class fields are kept `private`.
+- State is accessed through methods such as getters, update methods, and controlled helpers.
+- Classes such as `Lane`, `Intersection`, and `SimulationEngine` manage their own internal logic and data.
+
+### Inheritance
+
+- `Car` extends `Agent`
+- `Pedestrian` extends `Agent`
+- `AccidentEvent` extends `Event`
+- `CongestionEvent` extends `Event`
+
+### Polymorphism
+
+- A `List<Agent>` can hold both cars and pedestrians.
+- A `List<Event>` can hold both accidents and congestion events.
+- `BehaviorStrategy` can refer to either `NormalBehavior` or `AggressiveBehavior`.
+
+### Composition
+
+- `SimulationEngine` contains the grid, signal controller, agents, and events.
+- `Agent` contains a lane and a behavior strategy.
+- `Intersection` contains two traffic signals.
+
+### Interfaces
+
+- `BehaviorStrategy` is implemented by `NormalBehavior` and `AggressiveBehavior`.
+
+### Method Overriding
+
+- `Car` and `Pedestrian` override methods from `Agent`.
+- `AccidentEvent` and `CongestionEvent` override lifecycle methods from `Event`.
